@@ -15,16 +15,50 @@ UPLOAD_FOLDER = "uploads"
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
 
-# Ensure upload folder exists (IMPORTANT for deployment)
+# =========================
+# FIX 1: Ensure uploads folder exists
+# =========================
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 
+# =========================
+# FIX 2: Auto-create database table (CRITICAL FIX)
+# =========================
+def init_db():
+    conn = sqlite3.connect("library.db")
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS books (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            title TEXT NOT NULL,
+            author TEXT NOT NULL,
+            category TEXT,
+            file_name TEXT,
+            date_added TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+
+    conn.commit()
+    conn.close()
+
+
+# Run DB setup on startup
+init_db()
+
+
+# =========================
+# DB CONNECTION
+# =========================
 def get_db_connection():
     conn = sqlite3.connect("library.db")
     conn.row_factory = sqlite3.Row
     return conn
 
 
+# =========================
+# HOME PAGE
+# =========================
 @app.route("/")
 def home():
 
@@ -78,6 +112,9 @@ def home():
     )
 
 
+# =========================
+# ADD BOOK
+# =========================
 @app.route("/add", methods=["GET", "POST"])
 def add_book():
 
@@ -93,20 +130,13 @@ def add_book():
 
         if pdf and pdf.filename:
             filename = pdf.filename
-
-            pdf.save(
-                os.path.join(
-                    app.config["UPLOAD_FOLDER"],
-                    filename
-                )
-            )
+            pdf.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
 
         conn = get_db_connection()
 
         conn.execute(
             """
-            INSERT INTO books
-            (title, author, category, file_name)
+            INSERT INTO books (title, author, category, file_name)
             VALUES (?, ?, ?, ?)
             """,
             (title, author, category, filename)
@@ -120,6 +150,9 @@ def add_book():
     return render_template("add_book.html")
 
 
+# =========================
+# DELETE BOOK
+# =========================
 @app.route("/delete/<int:id>")
 def delete_book(id):
 
@@ -147,11 +180,16 @@ def delete_book(id):
     return redirect("/")
 
 
+# =========================
+# SERVE UPLOADS
+# =========================
 @app.route("/uploads/<filename>")
 def uploaded_file(filename):
     return send_from_directory(app.config["UPLOAD_FOLDER"], filename)
 
 
-# LOCAL RUN ONLY
+# =========================
+# RUN APP
+# =========================
 if __name__ == "__main__":
     app.run(debug=True)
