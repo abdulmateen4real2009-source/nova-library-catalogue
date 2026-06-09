@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NOVA Library Catalogue</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+    <!-- NAVBAR -->
+
+    <nav class="navbar">
+
+        <div class="logo">
+            📚 NOVA Library
+        </div>
+
+        <a href="/add" class="nav-btn">
+            + Add Book
+        </a>
+
+    </nav>
+
+    <!-- HERO -->
+
+    <section class="hero">
+
+        <h1>Library Catalogue</h1>
+
+        <p>
+            Organize, search and manage your digital books.
+        </p>
+
+    </section>
+
+    <!-- DASHBOARD -->
+
+    <div class="dashboard">
+
+        <div class="stat-card">
+            <h2>{{ total_books }}</h2>
+            <p>Total Books</p>
+        </div>
+
+        <div class="stat-card">
+            <h2>{{ category_count }}</h2>
+            <p>Categories</p>
+        </div>
+
+        <div class="stat-card">
+            <h2>{{ pdf_count }}</h2>
+            <p>PDF Files</p>
+        </div>
+
+    </div>
+
+    <!-- SEARCH -->
+
+    <form method="GET" action="/" class="search-form">
+
+        <input type="text" name="search" placeholder="Search by title, author or category..." value="{{ search }}">
+
+        <button type="submit">
+            Search
+        </button>
+
+    </form>
+
+    <!-- BOOKS -->
+
+    {% if books %}
+
+    {% for book in books %}
+
+    <div class="book-card">
+
+        <div class="book-header">
+
+            <h2>{{ book.title }}</h2>
+
+            <span class="book-date">
+                {{ book.date_added }}
+            </span>
+
+        </div>
+
+        <p>
+            <strong>Author:</strong>
+            {{ book.author }}
+        </p>
+
+        <p>
+            <strong>Category:</strong>
+            {{ book.category }}
+        </p>
+
+        <div class="book-actions">
+
+            {% if book.file_name %}
+
+            <a href="/uploads/{{ book.file_name }}" target="_blank" class="read-btn">
+
+                📖 Read PDF
+
+            </a>
+
+            {% endif %}
+
+            <a href="/delete/{{ book.id }}" class="delete-btn">
+
+                🗑 Delete
+
+            </a>
+
+        </div>
+
+    </div>
+
+    {% endfor %}
+
+    {% else %}
+
+    <div class="empty-state">
+
+        <h2>No Books Found</h2>
+
+        <p>
+            Add your first book to start building your library.
+        </p>
+
+        <a href="/add" class="add-btn">
+            Add Book
+        </a>
+
+    </div>
+
+    {% endif %}
+
+</body>
+
+</html>
