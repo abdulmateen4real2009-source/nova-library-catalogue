@@ -15,6 +15,10 @@ UPLOAD_FOLDER = "uploads"
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
 
+# Ensure upload folder exists (IMPORTANT for deployment)
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+
 def get_db_connection():
     conn = sqlite3.connect("library.db")
     conn.row_factory = sqlite3.Row
@@ -50,10 +54,7 @@ def home():
     ).fetchone()[0]
 
     category_count = conn.execute(
-        """
-        SELECT COUNT(DISTINCT category)
-        FROM books
-        """
+        "SELECT COUNT(DISTINCT category) FROM books"
     ).fetchone()[0]
 
     pdf_count = conn.execute(
@@ -105,20 +106,10 @@ def add_book():
         conn.execute(
             """
             INSERT INTO books
-            (
-                title,
-                author,
-                category,
-                file_name
-            )
+            (title, author, category, file_name)
             VALUES (?, ?, ?, ?)
             """,
-            (
-                title,
-                author,
-                category,
-                filename
-            )
+            (title, author, category, filename)
         )
 
         conn.commit()
@@ -140,11 +131,7 @@ def delete_book(id):
     ).fetchone()
 
     if book and book["file_name"]:
-
-        file_path = os.path.join(
-            app.config["UPLOAD_FOLDER"],
-            book["file_name"]
-        )
+        file_path = os.path.join(app.config["UPLOAD_FOLDER"], book["file_name"])
 
         if os.path.exists(file_path):
             os.remove(file_path)
@@ -162,12 +149,9 @@ def delete_book(id):
 
 @app.route("/uploads/<filename>")
 def uploaded_file(filename):
-
-    return send_from_directory(
-        app.config["UPLOAD_FOLDER"],
-        filename
-    )
+    return send_from_directory(app.config["UPLOAD_FOLDER"], filename)
 
 
+# LOCAL RUN ONLY
 if __name__ == "__main__":
     app.run(debug=True)
